@@ -3650,6 +3650,109 @@ def remove_neighbor(neighbor_ip_or_hostname):
         click.get_current_context().fail("Could not locate neighbor '{}'".format(neighbor_ip_or_hostname))
 
 #
+# 'net-detect' group ('config net-detect ...')
+#
+
+@config.group('net-detect')
+@click.pass_context
+def net_detect(ctx):
+    """NetDetect-related configuration tasks"""
+    pass
+
+#
+# 'interval' subcommand ('config net-detect interval ...')
+#
+
+@net_detect.command()
+@click.argument('interval', metavar='<net-detect-interval(int)>', required=True)
+@click.pass_context
+def interval(ctx,interval):
+    """Set net detect interval"""
+    try:
+        intv = int(interval)
+        config_db = ConfigDBConnector()
+        config_db.connect()
+        config_db.set_entry('NET_DETECT_CONFIG', 'interval', {'time':intv})
+
+    except ValueError:
+        ctx.fail("'interval' is not valid.")
+
+#
+# 'compute' group ('config compute ...')
+#
+
+@config.group()
+@click.pass_context
+def compute(ctx):
+    """ComputeGateway-related configuration tasks"""
+    pass
+
+#
+# 'node-route' subcommand ('config compute node-route ...')
+#
+
+@compute.group('node-route')
+@click.pass_context
+def node_route(ctx):
+    """Add or remove ComputeNode and node-route pair"""
+    pass
+
+#
+# 'add' subcommand ('config compute node-route add ...')
+#
+
+@node_route.command()
+@click.argument('ipaddr', metavar='<compute-node-ip>', required=True)
+@click.argument('prefix', metavar='<network/prefix>', required=True)
+@click.pass_context
+def add(ctx,ipaddr,prefix):
+    """Add a ComputeNode and node-route pair"""
+    try:
+        # input check
+        ipaddress.ip_network(str(ipaddr), strict=False)
+        ipaddress.ip_network(str(prefix), strict=False)
+        if "/" in ipaddr or "/" not in prefix:
+            raise ValueError
+        config_db = ConfigDBConnector()
+        config_db.connect()
+        config_db.set_entry('COMPUTE_NETWORK', ipaddr, {'network':prefix})
+
+    except ValueError:
+        ctx.fail("'ip_addr' is not valid.")
+
+#
+# 'remove' subcommand ('config compute node-route remove ...')
+#
+
+@node_route.command()
+@click.argument('ipaddr', metavar='<compute-node-ip>', required=True)
+@click.argument('prefix', metavar='<network/prefix>', required=True)
+@click.pass_context
+def remove(ctx,ipaddr,prefix):
+    """Remove a ComputeNode and node-route pair"""
+    try:
+        # input check
+        ipaddress.ip_network(str(ipaddr), strict=False)
+        ipaddress.ip_network(str(prefix), strict=False)
+        if "/" in ipaddr or "/" not in prefix:
+            raise ValueError
+        config_db = ConfigDBConnector()
+        config_db.connect()
+        config_db.mod_entry('COMPUTE_NETWORK', ipaddr, None)
+
+    except ValueError:
+        ctx.fail("'ip_addr' is not valid.")
+
+@config.group()
+@click.pass_context
+def interface(ctx):
+    """Interface-related configuration tasks"""
+    config_db = ConfigDBConnector()
+    config_db.connect()
+    ctx.obj = {}
+    ctx.obj['config_db'] = config_db
+
+#
 # 'interface' group ('config interface ...')
 #
 

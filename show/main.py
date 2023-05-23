@@ -317,6 +317,27 @@ def is_mgmt_vrf_enabled(ctx):
     return False
 
 #
+# 'compute-route' group ('show compute-route')
+#
+@cli.group('compute-route', invoke_without_command=True)
+@click.pass_context
+def compute_route(ctx):
+    """Show compute-route infos"""
+    appl_db = SonicV2Connector()
+    appl_db.connect(appl_db.APPL_DB)
+    header = ["ComputeGW", "IP", "CPU", "Ephemeral_torage", "GPU", "Hugepages_2mi", "Memory", "Pods", "Delay", "Nexthop"]
+
+    # Fetching data from appl_db
+    keys = appl_db.keys(appl_db.APPL_DB, "COMPUTE_ROUTE*")
+    vals = []
+    for key in keys if keys else []:
+        tbl, gw_ip, ip = key.split(":", 2)
+        val = appl_db.get_all(appl_db.APPL_DB, key)
+        vals.append([gw_ip, ip, val.get('cpu'),val.get('ephemeral_storage'),val.get('gpu'),val.get('hugepages_2mi'),val.get('memory'),val.get('pods'),val.get('delay'),val.get('nexthop')])
+
+    click.echo(tabulate(vals,header,tablefmt='fancy_grid'))
+
+#
 # 'mgmt-vrf' group ("show mgmt-vrf ...")
 #
 
